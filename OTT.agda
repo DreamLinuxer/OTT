@@ -36,8 +36,9 @@ mutual
   ⟦ Σ' S T ⟧ = Σ ⟦ S ⟧ (λ x → ⟦ T x ⟧)
   ⟦ W' S T ⟧ = W ⟦ S ⟧ (λ x → ⟦ T x ⟧)
 
-_⟼_ : set → set → set
-S ⟼ T = Π' S (λ _ → T)
+infixr 20 _⟶_
+_⟶_ : set → set → set
+S ⟶ T = Π' S (λ _ → T)
 
 _!_ : Empty → (P : Set) → P
 () ! P
@@ -67,11 +68,36 @@ zero = ff ◃ (λ z → z ! ⟦ Nat ⟧)
 suc : ⟦ Nat ⟧ → ⟦ Nat ⟧
 suc n = tt ◃ (λ _ → n)
 
+one : ⟦ Nat ⟧
+one = suc zero
+
 plus : ⟦ Nat ⟧ → ⟦ Nat ⟧ → ⟦ Nat ⟧
 plus x y = rec x / (λ _ → Nat) w
-               (λ b → if b / (λ b → Π' (Π' (Tr b) (λ _ → Nat))
-                                       (λ _ → Π' (Π' (Tr b) (λ _ → Nat))
-                                                 (λ _ → Nat)))
+               (λ b → if b / (λ b → ((Tr b) ⟶ Nat)
+                                  ⟶ ((Tr b) ⟶ Nat)
+                                  ⟶ Nat)
                       then (λ f h → suc (h (record {})))
                       else (λ f h → y))
 
+Branch : (b : Bool) → set
+Branch b = If b Then 𝟚 Else 𝟘
+
+Tree : set
+Tree = W' 𝟚 Branch
+
+leaf : ⟦ Tree ⟧
+leaf = ff ◃ (λ z → z ! ⟦ Tree ⟧)
+
+node : ⟦ Tree ⟧ → ⟦ Tree ⟧ → ⟦ Tree ⟧
+node l r = tt ◃ (λ {tt → l ; ff → r})
+
+count : ⟦ Tree ⟧ → ⟦ Nat ⟧
+count t = rec t / (λ _ → Nat) w
+              (λ b → if b / (λ b → ((Branch b) ⟶ Tree)
+                                ⟶ ((Branch b) ⟶ Nat)
+                                ⟶ Nat)
+                     then (λ f h → plus (h ff) (h tt))
+                     else (λ f h → one))
+
+four : ⟦ Nat ⟧
+four = count (node (node leaf leaf) (node leaf leaf))
