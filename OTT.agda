@@ -40,6 +40,10 @@ infixr 20 _⟶_
 _⟶_ : set → set → set
 S ⟶ T = Π' S (λ _ → T)
 
+infixr 20 _,_
+_,_ : set → set → set
+S , T = Σ' S (λ _ → T)
+
 _!_ : Empty → (P : Set) → P
 () ! P
 
@@ -101,3 +105,27 @@ count t = rec t / (λ _ → Nat) w
 
 four : ⟦ Nat ⟧
 four = count (node (node leaf leaf) (node leaf leaf))
+
+mutual
+  data prop : Set where
+    ⊥ : prop
+    ⊤ : prop
+    _∧_ : prop → prop → prop
+    Π_,_ : (S : set) → (⟦ S ⟧ → prop) → prop
+
+  ⌈_⌉ : prop → set
+  ⌈ ⊥ ⌉ = 𝟘
+  ⌈ ⊤ ⌉ = 𝟙
+  ⌈ P ∧ Q ⌉ = ⌈ P ⌉ , ⌈ Q ⌉
+  ⌈ Π S , P ⌉ = Π' S (λ s → ⌈ P s ⌉)
+
+mutual
+  _==_ : set → set → prop
+  𝟘 == 𝟘 = ⊤
+  𝟙 == 𝟙 = ⊤
+  𝟚 == 𝟚 = ⊤
+  Π' S₀ T₀ == Π' S₁ T₁ = {!!}
+  Σ' S₀ T₀ == Σ' S₁ T₁ = {!!}
+  W' S₀ T₀ == W' S₁ T₁ = {!!}
+  S == T = ⊥
+  
