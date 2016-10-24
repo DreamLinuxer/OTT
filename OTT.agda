@@ -111,28 +111,51 @@ mutual
     ⊥ : prop
     ⊤ : prop
     _∧_ : prop → prop → prop
-    Π_,_ : (S : set) → (⟦ S ⟧ → prop) → prop
+    Π_·_ : (S : set) → (⟦ S ⟧ → prop) → prop
 
   ⌈_⌉ : prop → set
   ⌈ ⊥ ⌉ = 𝟘
   ⌈ ⊤ ⌉ = 𝟙
   ⌈ P ∧ Q ⌉ = ⌈ P ⌉ , ⌈ Q ⌉
-  ⌈ Π S , P ⌉ = Π' S (λ s → ⌈ P s ⌉)
+  ⌈ Π S · P ⌉ = Π' S (λ s → ⌈ P s ⌉)
+
+_⇒_ : prop → prop → prop
+P ⇒ Q = Π ⌈ P ⌉ · (λ _ → Q)
 
 mutual
   _==_ : set → set → prop
   𝟘 == 𝟘 = ⊤
   𝟙 == 𝟙 = ⊤
   𝟚 == 𝟚 = ⊤
-  Π' S₀ T₀ == Π' S₁ T₁ = (S₀ == S₁) ∧ {!!}
-  Σ' S₀ T₀ == Σ' S₁ T₁ = {!!}
-  W' S₀ T₀ == W' S₁ T₁ = {!!}
+  Π' S₀ T₀ == Π' S₁ T₁ = (S₁ == S₀) ∧ (Π S₁ · (λ x₁ → Π S₀ · (λ x₀ → (x₁ ∶ S₁ == x₀ ∶ S₀) ⇒ (T₀ x₀ == T₁ x₁))))
+  Σ' S₀ T₀ == Σ' S₁ T₁ = (S₀ == S₁) ∧ (Π S₀ · (λ x₀ → Π S₁ · (λ x₁ → (x₀ ∶ S₀ == x₁ ∶ S₁) ⇒ (T₀ x₀ == T₁ x₁))))
+  W' S₀ T₀ == W' S₁ T₁ = (S₀ == S₁) ∧ (Π S₀ · (λ x₀ → Π S₁ · (λ x₁ → (x₀ ∶ S₀ == x₁ ∶ S₁) ⇒ (T₀ x₀ == T₁ x₁))))
   S == T = ⊥
 
-  _∶_==_∶_ : (S : set) → ⟦ S ⟧ → (T : set) → ⟦ T ⟧ → prop
-  _∶_==_∶_ = {!!}
-  
-  _[_⟩ : {S T : set} → ⟦ S ⟧ → (Q : ⟦ ⌈ S == T ⌉ ⟧) → ⟦ T ⟧
-  s [ Q ⟩ = {!!}
+  eq : (S : set) → ⟦ S ⟧ → (T : set) → ⟦ T ⟧ → prop
+  eq 𝟘 s 𝟘 t = ⊤
+  eq 𝟙 s 𝟙 t = ⊤
+  eq 𝟚 tt 𝟚 tt = ⊤
+  eq 𝟚 tt 𝟚 ff = ⊥
+  eq 𝟚 ff 𝟚 tt = ⊥
+  eq 𝟚 ff 𝟚 ff = ⊤
+  eq (Π' S x) s T t = {!!}
+  eq (Σ' S x) s T t = {!!}
+  eq (W' S x) s T t = {!!}
+  eq S s T t = {!!}
 
+  syntax eq S s T t  = s ∶ S == t ∶ T
 
+  coe : {S T : set} → ⟦ S ⟧ → (Q : ⟦ ⌈ S == T ⌉ ⟧) → ⟦ T ⟧
+  coe {𝟘} {𝟘} z Q = z
+  coe {𝟙} {𝟙} u Q = u
+  coe {𝟚} {𝟚} b Q = b
+  coe {Π' S₀ T₀} {Π' S₁ T₁} s Q = {!!}
+  coe {Σ' S₀ T₀} {Σ' S₁ T₁} s Q = {!!}
+  coe {W' S₀ T₀} {W' S₁ T₁} s Q = {!!}
+  coe {S} {T} s Q = {!Q ! T!}
+
+  syntax coe s Q = s [ Q ⟩
+
+  ⟨_∥_⟩ : {S T : set} → (s : ⟦ S ⟧) (Q : ⟦ ⌈ S == T ⌉ ⟧) → ⟦ ⌈ s ∶ S == s [ Q ⟩ ∶ T ⌉ ⟧
+  ⟨ s ∥ Q ⟩ = {!!}
