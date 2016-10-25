@@ -245,7 +245,7 @@ mutual
                                       Qₛ = fst Q
                                       s₁ = s₀ [ Qₛ ∶ S₀ == S₁ ⟩
                                       t₀ = snd p
-                                      Qₜ = {!!}
+                                      Qₜ = (snd Q) s₀ s₁ (⟨ s₀ ∥ Qₛ ∶ S₀ == S₁ ⟩)
                                   in ⟨ s₀ ∥ Qₛ ∶ S₀ == S₁ ⟩
                                    , ⟨ t₀ ∥ Qₜ ∶ T₀ s₀ == T₁ s₁ ⟩
   coh (Σ' S x) (W' T x₁) s ()
