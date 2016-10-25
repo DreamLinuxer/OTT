@@ -12,9 +12,11 @@ data Bool : Set where
 Π S T = (x : S) → T x
 
 record Σ (S : Set) (T : S → Set) : Set where
+  constructor _,_
   field
     fst : S
     snd : T fst
+open Σ
 
 data W (S : Set) (T : S → Set) : Set where
   _◃_ : (x : S) → (T x → W S T) → W S T
@@ -40,9 +42,9 @@ infixr 20 _⟶_
 _⟶_ : set → set → set
 S ⟶ T = Π' S (λ _ → T)
 
-infixr 20 _,_
-_,_ : set → set → set
-S , T = Σ' S (λ _ → T)
+infixr 20 _×_
+_×_ : set → set → set
+S × T = Σ' S (λ _ → T)
 
 _!_ : Empty → (P : Set) → P
 () ! P
@@ -116,20 +118,26 @@ mutual
   ⌈_⌉ : prop → set
   ⌈ ⊥ ⌉ = 𝟘
   ⌈ ⊤ ⌉ = 𝟙
-  ⌈ P ∧ Q ⌉ = ⌈ P ⌉ , ⌈ Q ⌉
+  ⌈ P ∧ Q ⌉ = ⌈ P ⌉ × ⌈ Q ⌉
   ⌈ Π S · P ⌉ = Π' S (λ s → ⌈ P s ⌉)
 
+infixr 40 _⇒_
 _⇒_ : prop → prop → prop
 P ⇒ Q = Π ⌈ P ⌉ · (λ _ → Q)
+
+all : (S : set) → (⟦ S ⟧ → prop) → prop
+all = Π_·_
+
+syntax all S (λ x → P) = `∀ x ∶ S · P
 
 mutual
   _==_ : set → set → prop
   𝟘 == 𝟘 = ⊤
   𝟙 == 𝟙 = ⊤
   𝟚 == 𝟚 = ⊤
-  Π' S₀ T₀ == Π' S₁ T₁ = (S₁ == S₀) ∧ (Π S₁ · (λ x₁ → Π S₀ · (λ x₀ → (x₁ ∶ S₁ == x₀ ∶ S₀) ⇒ (T₀ x₀ == T₁ x₁))))
-  Σ' S₀ T₀ == Σ' S₁ T₁ = (S₀ == S₁) ∧ (Π S₀ · (λ x₀ → Π S₁ · (λ x₁ → (x₀ ∶ S₀ == x₁ ∶ S₁) ⇒ (T₀ x₀ == T₁ x₁))))
-  W' S₀ T₀ == W' S₁ T₁ = (S₀ == S₁) ∧ (Π S₀ · (λ x₀ → Π S₁ · (λ x₁ → (x₀ ∶ S₀ == x₁ ∶ S₁) ⇒ (T₀ x₀ == T₁ x₁))))
+  Π' S₀ T₀ == Π' S₁ T₁ = (S₁ == S₀) ∧ (`∀ x₁ ∶ S₁ · `∀ x₀ ∶ S₀ · (x₁ ∶ S₁ == x₀ ∶ S₀) ⇒ (T₀ x₀ == T₁ x₁))
+  Σ' S₀ T₀ == Σ' S₁ T₁ = (S₀ == S₁) ∧ (`∀ x₀ ∶ S₀ · `∀ x₁ ∶ S₁ · (x₀ ∶ S₀ == x₁ ∶ S₁) ⇒ (T₀ x₀ == T₁ x₁))
+  W' S₀ T₀ == W' S₁ T₁ = (S₀ == S₁) ∧ (`∀ x₀ ∶ S₀ · `∀ x₁ ∶ S₁ · (x₀ ∶ S₀ == x₁ ∶ S₁) ⇒ (T₁ x₁ == T₀ x₀))
   S == T = ⊥
 
   eq : (S : set) → ⟦ S ⟧ → (T : set) → ⟦ T ⟧ → prop
@@ -139,21 +147,67 @@ mutual
   eq 𝟚 tt 𝟚 ff = ⊥
   eq 𝟚 ff 𝟚 tt = ⊥
   eq 𝟚 ff 𝟚 ff = ⊤
-  eq (Π' S x) s T t = {!!}
-  eq (Σ' S x) s T t = {!!}
-  eq (W' S x) s T t = {!!}
-  eq S s T t = {!!}
+  eq (Π' S₀ T₀) f₀ (Π' S₁ T₁) f₁ = `∀ x₀ ∶ S₀ · `∀ x₁ ∶ S₁ · (x₀ ∶ S₀ == x₁ ∶ S₁) ⇒ (f₀ x₀ ∶ T₀ x₀ == f₁ x₁ ∶ T₁ x₁)
+  eq (Σ' S₀ T₀) p₀ (Σ' S₁ T₁) p₁ = (fst p₀ ∶ S₀ == fst p₁ ∶ S₁) ∧ (snd p₀ ∶ T₀ (fst p₀) == snd p₁ ∶ T₁ (fst p₁))
+  eq (W' S₀ T₀) (s₀ ◃ f₀) (W' S₁ T₁) (s₁ ◃ f₁) = (s₀ ∶ S₀ == s₁ ∶ S₁)
+                                               ∧ (`∀ y₀ ∶ T₀ s₀ · `∀ y₁ ∶ T₁ s₁ · (y₀ ∶ T₀ s₀ == y₁ ∶ T₁ s₁)
+                                                                                ⇒ (f₀ y₀ ∶ W' S₀ T₀ == f₁ y₁ ∶ W' S₁ T₁))
+  eq S s T t = ⊥
 
   syntax eq S s T t  = s ∶ S == t ∶ T
 
   coe : {S T : set} → ⟦ S ⟧ → (Q : ⟦ ⌈ S == T ⌉ ⟧) → ⟦ T ⟧
   coe {𝟘} {𝟘} z Q = z
+  coe {𝟘} {𝟙} z Q = Q ! ⟦ 𝟙 ⟧
+  coe {𝟘} {𝟚} z Q = Q ! ⟦ 𝟚 ⟧
+  coe {𝟘} {Π' S T} z Q = Q ! ⟦ Π' S T ⟧
+  coe {𝟘} {Σ' S T} z Q = Q ! ⟦ Σ' S T ⟧
+  coe {𝟘} {W' S T} z Q = Q ! ⟦ W' S T ⟧
+  coe {𝟙} {𝟘} u Q = Q ! ⟦ 𝟘 ⟧
   coe {𝟙} {𝟙} u Q = u
+  coe {𝟙} {𝟚} u Q = Q ! ⟦ 𝟚 ⟧
+  coe {𝟙} {Π' S T} u Q = Q ! ⟦ Π' S T ⟧
+  coe {𝟙} {Σ' S T} u Q = Q ! ⟦ Σ' S T ⟧
+  coe {𝟙} {W' S T} u Q = Q ! ⟦ W' S T ⟧
+  coe {𝟚} {𝟘} b Q = Q ! ⟦ 𝟘 ⟧
+  coe {𝟚} {𝟙} b Q = Q ! ⟦ 𝟙 ⟧
   coe {𝟚} {𝟚} b Q = b
-  coe {Π' S₀ T₀} {Π' S₁ T₁} s Q = {!!}
-  coe {Σ' S₀ T₀} {Σ' S₁ T₁} s Q = {!!}
-  coe {W' S₀ T₀} {W' S₁ T₁} s Q = {!!}
-  coe {S} {T} s Q = {!Q ! T!}
+  coe {𝟚} {Π' S T} u Q = Q ! ⟦ Π' S T ⟧
+  coe {𝟚} {Σ' S T} u Q = Q ! ⟦ Σ' S T ⟧
+  coe {𝟚} {W' S T} u Q = Q ! ⟦ W' S T ⟧
+  coe {Π' S₀ T₀} {𝟘} s Q = Q ! ⟦ 𝟘 ⟧
+  coe {Π' S₀ T₀} {𝟙} s Q = Q ! ⟦ 𝟙 ⟧
+  coe {Π' S₀ T₀} {𝟚} s Q = Q ! ⟦ 𝟚 ⟧
+  coe {Π' S₀ T₀} {Π' S₁ T₁} f₀ Q = λ s₁ → let Qₛ = fst Q
+                                              s₀ = s₁ [ Qₛ ⟩
+                                              t₀ = f₀ s₀
+                                              Qₜ = snd Q s₁ s₀ ⟨ s₁ ∥ Qₛ ⟩
+                                              t₁ = t₀ [ Qₜ ⟩
+                                          in t₁
+  coe {Π' S₀ T₀} {Σ' S₁ T₁} s Q = Q ! ⟦ Σ' S₁ T₁ ⟧
+  coe {Π' S₀ T₀} {W' S₁ T₁} s Q = Q ! ⟦ W' S₁ T₁ ⟧
+  coe {Σ' S₀ T₀} {𝟘} s Q = Q ! ⟦ 𝟘 ⟧
+  coe {Σ' S₀ T₀} {𝟙} s Q = Q ! ⟦ 𝟙 ⟧
+  coe {Σ' S₀ T₀} {𝟚} s Q = Q ! ⟦ 𝟚 ⟧
+  coe {Σ' S₀ T₀} {Π' S₁ T₁} s Q = Q ! ⟦ Π' S₁ T₁ ⟧
+  coe {Σ' S₀ T₀} {Σ' S₁ T₁} p₀ Q = let s₀ = fst p₀
+                                       t₀ = snd p₀
+                                       Qₛ = fst Q
+                                       s₁ = s₀ [ Qₛ ⟩
+                                       Qₜ = snd Q s₀ s₁ ⟨ s₀ ∥ Qₛ ⟩
+                                       t₁ = t₀ [ Qₜ ⟩
+                                   in s₁ , t₁
+  coe {Σ' S₀ T₀} {W' S₁ T₁} s Q = Q ! ⟦ W' S₁ T₁ ⟧
+  coe {W' S₀ T₀} {𝟘} s Q = Q ! ⟦ 𝟘 ⟧
+  coe {W' S₀ T₀} {𝟙} s Q = Q ! ⟦ 𝟙 ⟧
+  coe {W' S₀ T₀} {𝟚} s Q = Q ! ⟦ 𝟚 ⟧
+  coe {W' S₀ T₀} {Π' S₁ T₁} s Q = Q ! ⟦ Π' S₁ T₁ ⟧
+  coe {W' S₀ T₀} {Σ' S₁ T₁} s Q = Q ! ⟦ Σ' S₁ T₁ ⟧
+  coe {W' S₀ T₀} {W' S₁ T₁} (s₀ ◃ f₀) Q = let Qₛ = fst Q
+                                              s₁ = s₀ [ Qₛ ⟩
+                                              Qₜ = (snd Q) s₀ s₁ ⟨ s₀ ∥ Qₛ ⟩
+                                          in s₁ ◃ (λ t₁ → let t₀ = t₁ [ Qₜ ⟩
+                                                          in f₀ t₀ [ Q ⟩)
 
   syntax coe s Q = s [ Q ⟩
 
