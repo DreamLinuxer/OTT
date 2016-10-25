@@ -212,4 +212,40 @@ mutual
                                                           in f₀ t₀ [ Q ∶ W' S₀ T₀ == W' S₁ T₁ ⟩)
   
   coh : (S T : set) → (s : ⟦ S ⟧) (Q : ⟦ ⌈ S == T ⌉ ⟧) → ⟦ ⌈ s ∶ S == s [ Q ∶ S == T ⟩ ∶ T ⌉ ⟧
-  coh = {!!}
+  coh 𝟘 𝟘 s Q = record {}
+  coh 𝟘 𝟙 s ()
+  coh 𝟘 𝟚 s ()
+  coh 𝟘 (Π' T x) s ()
+  coh 𝟘 (Σ' T x) s ()
+  coh 𝟘 (W' T x) s ()
+  coh 𝟙 𝟘 s ()
+  coh 𝟙 𝟙 s Q = record {}
+  coh 𝟙 𝟚 s ()
+  coh 𝟙 (Π' T x) s ()
+  coh 𝟙 (Σ' T x) s ()
+  coh 𝟙 (W' T x) s ()
+  coh 𝟚 𝟘 s ()
+  coh 𝟚 𝟙 s ()
+  coh 𝟚 𝟚 tt Q = record {}
+  coh 𝟚 𝟚 ff Q = record {}
+  coh 𝟚 (Π' T x) s ()
+  coh 𝟚 (Σ' T x) s ()
+  coh 𝟚 (W' T x) s ()
+  coh (Π' S x) 𝟘 s ()
+  coh (Π' S x) 𝟙 s ()
+  coh (Π' S x) 𝟚 s ()
+  coh (Π' S₀ T₀) (Π' S₁ T₁) s Q = {!!}
+  coh (Π' S x) (Σ' T x₁) s ()
+  coh (Π' S x) (W' T x₁) s ()
+  coh (Σ' S x) 𝟘 s ()
+  coh (Σ' S x) 𝟙 s ()
+  coh (Σ' S x) 𝟚 s ()
+  coh (Σ' S x) (Π' T x₁) s ()
+  coh (Σ' S₀ T₀) (Σ' S₁ T₁) s Q = {!!}
+  coh (Σ' S x) (W' T x₁) s ()
+  coh (W' S x) 𝟘 s ()
+  coh (W' S x) 𝟙 s ()
+  coh (W' S x) 𝟚 s ()
+  coh (W' S x) (Π' T x₁) s ()
+  coh (W' S x) (Σ' T x₁) s ()
+  coh (W' S₀ T₀) (W' S₁ T₁) s Q = {!!}
